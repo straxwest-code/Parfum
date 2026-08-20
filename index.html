@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conseiller Parfum - Guide & Sélecteur Olfactif</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F8FAFC; --line:#E2E8F0;
+    --text:#0F172A; --muted:#64748B; --gold:#C59B27; --gold-dark:#9A7618;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter', sans-serif;}
+  .app-root{padding:20px 16px 50px;max-width:640px;margin:0 auto;}
+  
+  .header{text-align:center;margin-bottom:20px;}
+  .header-icon{font-size:32px;margin-bottom:4px;}
+  .header h1{font-family:'Playfair Display', serif;font-weight:700;font-size:24px;margin:0;color:var(--text);}
+  .header p{margin:4px 0 0;font-size:13px;color:var(--muted);}
+
+  .filter-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 3px 10px rgba(0,0,0,0.03);}
+  
+  .form-group{margin-bottom:12px;}
+  .label-group{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:6px;display:block;}
+  
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  
+  select, input[type="text"]{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13.5px;font-family:'Inter', sans-serif;outline:none;transition:border-color .15s;}
+  select:focus, input[type="text"]:focus{border-color:var(--gold);}
+  
+  .results-meta{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px;}
+  .results-title{font-family:'Playfair Display', serif;font-size:18px;font-weight:700;margin:0;}
+  .results-count{font-size:12.5px;color:var(--muted);}
+
+  .perfume-list{display:flex;flex-direction:column;gap:10px;}
+  .perfume-card{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 2px 6px rgba(0,0,0,0.02);animation:fadeIn 0.2s ease;}
+  
+  .perfume-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .perfume-name{font-family:'Playfair Display', serif;font-weight:700;font-size:16.5px;margin:0;color:var(--text);}
+  .perfume-brand{font-size:12.5px;color:var(--gold-dark);font-weight:600;margin-top:1px;}
+  .badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;background:#FFFFFF;border:1px solid var(--line);white-space:nowrap;}
+
+  .perfume-notes{font-size:12px;color:var(--text);margin:6px 0;line-height:1.4;}
+  .perfume-desc{font-size:12.5px;color:var(--muted);line-height:1.45;margin:0 0 8px;}
+  
+  .tags-row{display:flex;flex-wrap:wrap;gap:5px;}
+  .tag{font-size:11px;padding:2px 7px;border-radius:5px;background:#FFFFFF;border:1px solid var(--line);color:var(--muted);}
+  .tag.season{background:rgba(197,155,39,0.08);color:var(--gold-dark);border-color:rgba(197,155,39,0.2);font-weight:500;}
+  .tag.niche{background:rgba(13,148,136,0.08);color:#0D9488;border-color:rgba(13,148,136,0.2);font-weight:600;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .empty-state{text-align:center;padding:30px 16px;color:var(--muted);font-size:13.5px;border:1px dashed var(--line);border-radius:14px;}
+</style>
+</head>
+<body>
+<div class="app-root">
+  <div class="header">
+    <div class="header-icon">🌿</div>
+    <h1>Conseiller Parfum</h1>
+    <p>Sélection de grands classiques et parfums de niche selon vos goûts</p>
+  </div>
+
+  <div class="filter-card">
+    <div class="form-group">
+      <input type="text" id="searchInput" placeholder="🔍 Rechercher par nom, marque ou note (ex: vanille, oud, rose...)" oninput="filterPerfumes()" />
+    </div>
+
+    <div class="form-group grid-2">
+      <div>
+        <label class="label-group">Famille olfactive</label>
+        <select id="familySelect" onchange="filterPerfumes()">
+          <option value="all">Toutes les familles</option>
+          <option value="boise">Boisé / Vétiver / Oud</option>
+          <option value="floral">Floral / Poudré</option>
+          <option value="oriental">Oriental / Ambré / Épicé</option>
+          <option value="gourmand">Gourmand / Vanillé / Sucré</option>
+          <option value="frais">Frais / Hespéridé / Marin</option>
+          <option value="cuire">Cuiré / Tabac</option>
+          <option value="aromatique">Aromatique / Vert / Fougère</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label-group">Genre</label>
+        <select id="genderSelect" onchange="filterPerfumes()">
+          <option value="all">Tous genres</option>
+          <option value="Femme">Femme</option>
+          <option value="Homme">Homme</option>
+          <option value="Unisexe">Unisexe</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group grid-2">
+      <div>
+        <label class="label-group">Saison recommandée</label>
+        <select id="seasonSelect" onchange="filterPerfumes()">
+          <option value="all">Toutes saisons</option>
+          <option value="Printemps">Printemps</option>
+          <option value="Été">Été</option>
+          <option value="Automne">Automne</option>
+          <option value="Hiver">Hiver</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label-group">Type de maison</label>
+        <select id="typeSelect" onchange="filterPerfumes()">
+          <option value="all">Toutes les maisons</option>
+          <option value="designer">Grandes Maisons (Designer)</option>
+          <option value="niche">Parfumerie de Niche / Créateur</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-meta">
+    <h2 class="results-title" id="resultsTitle">Sélection</h2>
+    <span class="results-count" id="resultsCount">0 résultat</span>
+  </div>
+
+  <div id="resultsArea"></div>
+</div>
+
+<script>
+const PERFUMES = [
+  // --- FRAIS / MARIN / HESPÉRIDÉ ---
+  {
+    name: "Acqua Di Giò", brand: "Giorgio Armani", gender: "Homme", type: "designer",
+    family: "frais", familyLabel: "Aquatique / Marin", notes: "Calone, bergamote, néroli, patchouli",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "L'incontournable classique d'une brise marine fraîche et énergisante."
+  },
+  {
+    name: "Pacific Rock Moss", brand: "Goldfield & Banks", gender: "Unisexe", type: "niche",
+    family: "frais", familyLabel: "Marin / Aromatique", notes: "Mousse de roche côtière, citron, sauge, cèdre",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "Une fragrance de niche australienne évoquant un plongeon vivifiant dans l'océan Pacifique."
+  },
+  {
+    name: "Light Blue", brand: "Dolce & Gabbana", gender: "Femme", type: "designer",
+    family: "frais", familyLabel: "Hespéridé / Fruité", notes: "Citron de Sicile, pomme granny smith, bambou, cèdre",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "Un éclat de fraîcheur estivale évoquant le soleil et la mer Méditerranée."
+  },
+  {
+    name: "Neroli Portofino", brand: "Tom Ford", gender: "Unisexe", type: "niche",
+    family: "frais", familyLabel: "Hespéridé floral", notes: "Néroli, fleur d'oranger, bergamote, ambre",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien / Chic",
+    desc: "Un hommage luxueux aux eaux scintillantes et à la végétation de la Riviera italienne."
+  },
+  {
+    name: "Wūlóng Chá", brand: "Nishane", gender: "Unisexe", type: "niche",
+    family: "frais", familyLabel: "Agrumes / Thé vert", notes: "Bergamote, litsée citronnée, thé oolong, musc",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "L'un des thés aux agrumes les plus puissants et rafraîchissants de la parfumerie de niche."
+  },
+  {
+    name: "Un Jardin sur le Nil", brand: "Hermès", gender: "Unisexe", type: "designer",
+    family: "frais", familyLabel: "Vert / Fruité aquatique", notes: "Mangue verte, lotus, calamus, encens",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "Une balade végétale et aquatique sur les îles du Nil, pleine de vitalité et d'élégance."
+  },
+
+  // --- BOISÉ / VÉTIVER / OUD ---
+  {
+    name: "Terre d'Hermès", brand: "Hermès", gender: "Homme", type: "designer",
+    family: "boise", familyLabel: "Boisé minéral", notes: "Orange amère, pamplemousse, silex, cèdre, vétiver",
+    seasons: ["Printemps", "Automne"], occasion: "Quotidien / Bureau",
+    desc: "Une signature moderne et intemporelle entre terre, roche et agrumes."
+  },
+  {
+    name: "Bleu de Chanel", brand: "Chanel", gender: "Homme", type: "designer",
+    family: "boise", familyLabel: "Boisé aromatique", notes: "Menthe, pamplemousse, cèdre, santal, encens",
+    seasons: ["Printemps", "Été", "Automne"], occasion: "Polyvalent",
+    desc: "Le modèle d'équilibre et de polyvalence masculine par excellence."
+  },
+  {
+    name: "Santal 33", brand: "Le Labo", gender: "Unisexe", type: "niche",
+    family: "boise", familyLabel: "Boisé cuiré", notes: "Santal, cèdre, cardamome, iris, violette, cuir",
+    seasons: ["Automne", "Hiver", "Printemps"], occasion: "Signature",
+    desc: "L'icône new-yorkaise au sillage fumé, boisé et reconnaissable entre mille."
+  },
+  {
+    name: "Oud Wood", brand: "Tom Ford", gender: "Unisexe", type: "niche",
+    family: "boise", familyLabel: "Boisé précieux / Oud", notes: "Bois de oud, palissandre, cardamome, santal, vétiver",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Chic",
+    desc: "Un oud fumé, doux et crémeux, d'un raffinement rare."
+  },
+  {
+    name: "Encre Noire", brand: "Lalique", gender: "Homme", type: "designer",
+    family: "boise", familyLabel: "Boisé sombre / Vétiver", notes: "Cyprès, vétiver bourbon, vétiver d'Haïti, bois de cachemire",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Quotidien",
+    desc: "Un vétiver terreux et sombre d'une incroyable qualité pour son prix."
+  },
+  {
+    name: "Tam Dao", brand: "Diptyque", gender: "Unisexe", type: "niche",
+    family: "boise", familyLabel: "Boisé pur", notes: "Santal de Goa, cèdre, cyprès, myrte",
+    seasons: ["Printemps", "Automne", "Hiver"], occasion: "Quotidien",
+    desc: "La sérénité d'une forêt sacrée d'Indochine bercée par la chaleur du bois de santal."
+  },
+
+  // --- FLORAL / POUDRÉ ---
+  {
+    name: "Miss Dior", brand: "Dior", gender: "Femme", type: "designer",
+    family: "floral", familyLabel: "Floral frais", notes: "Rose de Grasse, muguet, pivoine, iris",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "Un bouquet floral doux, poétique et éclatant de féminité."
+  },
+  {
+    name: "Carnal Flower", brand: "Frédéric Malle", gender: "Unisexe", type: "niche",
+    family: "floral", familyLabel: "Tubéreuse solaire", notes: "Tubéreuse, eucalyptus, noix de coco, fleur d'oranger",
+    seasons: ["Printemps", "Été", "Automne"], occasion: "Signature / Soirée",
+    desc: "La tubéreuse absolue : fraîche en tête, charnelle et magnétique en fond."
+  },
+  {
+    name: "J'adore", brand: "Dior", gender: "Femme", type: "designer",
+    family: "floral", familyLabel: "Floral fruité", notes: "Ylang-ylang, rose damascena, jasmin sambac, prune",
+    seasons: ["Printemps", "Été", "Automne"], occasion: "Quotidien / Cérémonie",
+    desc: "L'harmonie parfaite d'un grand bouquet d'or liquide intemporel."
+  },
+  {
+    name: "Delina", brand: "Parfums de Marly", gender: "Femme", type: "niche",
+    family: "floral", familyLabel: "Floral fruité poudré", notes: "Rose turque, litchi, rhubarbe, pivoine, vanille, muscs",
+    seasons: ["Printemps", "Automne"], occasion: "Signature / Sortie",
+    desc: "Une rose moderne, addictive et acidulée au sillage ultra-performant."
+  },
+  {
+    name: "Fleur Narcotique", brand: "Ex Nihilo", gender: "Unisexe", type: "niche",
+    family: "floral", familyLabel: "Floral aérien", notes: "Pivoine, litchi, bergamote, fleur d'oranger, mousse",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien / Chic",
+    desc: "Une overdose de fleurs blanches et de litchi, sophistiquée et lumineuse."
+  },
+  {
+    name: "Bois d'Argent", brand: "Dior Privee", gender: "Unisexe", type: "niche",
+    family: "floral", familyLabel: "Boisé poudré", notes: "Iris de Florence, encens du Yémen, myrrhe, muscs",
+    seasons: ["Automne", "Hiver", "Printemps"], occasion: "Quotidien / Élégant",
+    desc: "Un voile poudré mystérieux et intimiste, chef-d'œuvre de discrétion."
+  },
+
+  // --- ORIENTAL / AMBRÉ / ÉPICÉ ---
+  {
+    name: "Baccarat Rouge 540", brand: "Maison Francis Kurkdjian", gender: "Unisexe", type: "niche",
+    family: "oriental", familyLabel: "Ambré floral", notes: "Safran, jasmin, ambre gris, résine de cèdre",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Signature",
+    desc: "Une alchimie poétique et lumineuse créant une aura prestigieuse et addictive."
+  },
+  {
+    name: "Grand Soir", brand: "Maison Francis Kurkdjian", gender: "Unisexe", type: "niche",
+    family: "oriental", familyLabel: "Ambré vanillé", notes: "Ambre, benjoin de Siam, fève tonka, vanille",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Nuit",
+    desc: "La magie d'une nuit parisienne enveloppée d'une chaleur ambrée d'une grande sensualité."
+  },
+  {
+    name: "Black Opium", brand: "Yves Saint Laurent", gender: "Femme", type: "designer",
+    family: "oriental", familyLabel: "Oriental café vanille", notes: "Café noir, fleur d'oranger, jasmin, vanille",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée",
+    desc: "Le contraste d'un shoot de caféine adouci par une vanille ultra-gourmande."
+  },
+  {
+    name: "L'Air du Désert Marocain", brand: "Tauer Perfumes", gender: "Unisexe", type: "niche",
+    family: "oriental", familyLabel: "Épicé / Résineux", notes: "Coriandre, cumin, labdanum, cèdre, ambre",
+    seasons: ["Automne", "Hiver"], occasion: "Signature",
+    desc: "L'évocation d'un vent chaud et épicé soufflant sur les collines du Maghreb."
+  },
+  {
+    name: "Shalimar", brand: "Guerlain", gender: "Femme", type: "designer",
+    family: "oriental", familyLabel: "Oriental historique", notes: "Bergamote, iris, jasmin, vanille, fève tonka, opoponax",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Signature",
+    desc: "Le premier grand oriental de l'histoire, symbole d'amour passionné et de velours vanillé."
+  },
+  {
+    name: "Sauvage Elixir", brand: "Dior", gender: "Homme", type: "designer",
+    family: "oriental", familyLabel: "Épicé boisé concentré", notes: "Cannelle, muscade, cardamome, lavande, réglisse",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée",
+    desc: "Une concentration extrême d'épices chaudes et de lavande noble au sillage dévastateur."
+  },
+
+  // --- GOURMAND / VANILLÉ ---
+  {
+    name: "La Vie est Belle", brand: "Lancôme", gender: "Femme", type: "designer",
+    family: "gourmand", familyLabel: "Floral gourmand", notes: "Iris, jasmin, fleur d'oranger, praline, vanille, patchouli",
+    seasons: ["Automne", "Hiver"], occasion: "Quotidien / Soirée",
+    desc: "Le sourire gourmand par excellence, enveloppant et profondément réconfortant."
+  },
+  {
+    name: "Lost Cherry", brand: "Tom Ford", gender: "Unisexe", type: "niche",
+    family: "gourmand", familyLabel: "Fruité liquoreux", notes: "Cerise noire, liqueur de griotte, amande amère, fève tonka",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée",
+    desc: "Une cerise noire pulpeuse macérée dans la liqueur, sensuelle et interdite."
+  },
+  {
+    name: "Angels' Share", brand: "Kilian Paris", gender: "Unisexe", type: "niche",
+    family: "gourmand", familyLabel: "Gourmand boisé alcoolisé", notes: "Cognac, cannelle, fève tonka, chêne, vanille, praline",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Hiver",
+    desc: "Une création d'exception inspirée de la part des anges des fûts de cognac."
+  },
+  {
+    name: "Khamrah", brand: "Lattafa", gender: "Unisexe", type: "niche",
+    family: "gourmand", familyLabel: "Oriental gourmand épicé", notes: "Cannelle, muscade, dattes, praline, tubéreuse, vanille",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée",
+    desc: "Une douceur orientale généreuse de dattes caramélisées et d'épices douces."
+  },
+  {
+    name: "L'Homme Idéal", brand: "Guerlain", gender: "Homme", type: "designer",
+    family: "gourmand", familyLabel: "Amandé boisé", notes: "Agrumes, romarin, amande amère, fève tonka, cuir, cèdre",
+    seasons: ["Automne", "Hiver"], occasion: "Quotidien / Soirée",
+    desc: "L'accord amande-amaretto sublimé par le cuir, irrésistible et élégant."
+  },
+
+  // --- CUIRÉ / TABAC ---
+  {
+    name: "Tobacco Vanille", brand: "Tom Ford", gender: "Unisexe", type: "niche",
+    family: "cuire", familyLabel: "Tabac gourmand", notes: "Feuille de tabac, épices, vanille, cacao, fève tonka, fruits secs",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée / Froid",
+    desc: "L'ambiance feutrée d'un club de gentlemen anglais où le tabac rencontre la vanille crémeuse."
+  },
+  {
+    name: "Herod", brand: "Parfums de Marly", gender: "Homme", type: "niche",
+    family: "cuire", familyLabel: "Tabac vanille fumé", notes: "Cannelle, poivre, feuilles de tabac, encens, vanille, cèdre",
+    seasons: ["Automne", "Hiver"], occasion: "Soirée",
+    desc: "Une sophistication royale de tabac doux et de cannelle réchauffée à la vanille."
+  },
+  {
+    name: "Ombré Leather", brand: "Tom Ford", gender: "Unisexe", type: "designer",
+    family: "cuire", familyLabel: "Cuir floral", notes: "Cardamome, cuir noir, jasmin sambac, mousse, patchouli",
+    seasons: ["Automne", "Hiver", "Printemps"], occasion: "Signature / Soirée",
+    desc: "La pureté tactile d'un cuir noir texturé contrasté par la délicatesse du jasmin."
+  },
+  {
+    name: "Cuir Beluga", brand: "Guerlain", gender: "Unisexe", type: "niche",
+    family: "cuire", familyLabel: "Cuir daim vanillé", notes: "Mandarine, immortelle, daim blanc, ambre, vanille",
+    seasons: ["Automne", "Hiver"], occasion: "Quotidien / Chic",
+    desc: "La douceur infinie d'un daim caressé par une vanille poudrée très haute couture."
+  },
+
+  // --- AROMATIQUE / VERT / FOUGÈRE ---
+  {
+    name: "Green Irish Tweed", brand: "Creed", gender: "Homme", type: "niche",
+    family: "aromatique", familyLabel: "Fougère fraîche", notes: "Menthe poivrée, verveine, feuille de violette, iris, ambre gris",
+    seasons: ["Printemps", "Été", "Automne"], occasion: "Quotidien / Signature",
+    desc: "L'élégance intemporelle d'une promenade dans la campagne irlandaise fraîchement tondue."
+  },
+  {
+    name: "Philosykos", brand: "Diptyque", gender: "Unisexe", type: "niche",
+    family: "aromatique", familyLabel: "Vert fruité / Figuier", notes: "Feuille de figuier, sève de figue, bois de figuier, poivre noir",
+    seasons: ["Printemps", "Été"], occasion: "Quotidien",
+    desc: "Le figuier dans son intégralité : la verdeur de la feuille, le lait du fruit et la force du tronc."
+  },
+  {
+    name: "Le Mâle", brand: "Jean Paul Gaultier", gender: "Homme", type: "designer",
+    family: "aromatique", familyLabel: "Fougère orientale", notes: "Menthe, lavande, cardamome, cannelle, vanille, fève tonka",
+    seasons: ["Automne", "Hiver", "Printemps"], occasion: "Soirée / Quotidien",
+    desc: "L'accord lavande-menthe de barbier transcendé par la sensualité de la vanille."
+  },
+  {
+    name: "Libre", brand: "Yves Saint Laurent", gender: "Femme", type: "designer",
+    family: "aromatique", familyLabel: "Fougère florale", notes: "Lavande de France, fleur d'oranger du Maroc, mandarine, vanille",
+    seasons: ["Printemps", "Automne", "Hiver"], occasion: "Quotidien / Soirée",
+    desc: "La structure masculine de la fougère revisitée avec une éclatante sensualité féminine."
+  }
+];
+
+function filterPerfumes(){
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const family = document.getElementById('familySelect').value;
+  const gender = document.getElementById('genderSelect').value;
+  const season = document.getElementById('seasonSelect').value;
+  const type = document.getElementById('typeSelect').value;
+
+  const results = PERFUMES.filter(p => {
+    const matchFamily = (family === 'all' || p.family === family);
+    const matchGender = (gender === 'all' || p.gender === gender || p.gender === 'Unisexe');
+    const matchSeason = (season === 'all' || p.seasons.includes(season));
+    const matchType = (type === 'all' || p.type === type);
+
+    const matchQuery = !query || 
+      p.name.toLowerCase().includes(query) ||
+      p.brand.toLowerCase().includes(query) ||
+      p.notes.toLowerCase().includes(query) ||
+      p.desc.toLowerCase().includes(query);
+
+    return matchFamily && matchGender && matchSeason && matchType && matchQuery;
+  });
+
+  renderResults(results);
+}
+
+function renderResults(list){
+  const area = document.getElementById('resultsArea');
+  const countEl = document.getElementById('resultsCount');
+
+  countEl.textContent = `${list.length} référence${list.length > 1 ? 's' : ''}`;
+
+  if(list.length === 0){
+    area.innerHTML = '<div class="empty-state">Aucun parfum ne correspond à vos critères. Essayez d\'élargir les filtres ou de modifier votre mot-clé.</div>';
+    return;
+  }
+
+  let html = '<div class="perfume-list">';
+
+  list.forEach(p => {
+    html += `
+      <div class="perfume-card">
+        <div class="perfume-top">
+          <div>
+            <h3 class="perfume-name">${p.name}</h3>
+            <div class="perfume-brand">${p.brand}</div>
+          </div>
+          <span class="badge">${p.gender}</span>
+        </div>
+        <div class="perfume-notes"><b>Notes :</b> ${p.notes}</div>
+        <p class="perfume-desc">${p.desc}</p>
+        <div class="tags-row">
+          <span class="tag">${p.familyLabel}</span>
+          ${p.type === 'niche' ? '<span class="tag niche">Maison de Niche</span>' : '<span class="tag">Grande Maison</span>'}
+          ${p.seasons.map(s => `<span class="tag season">☀️ ${s}</span>`).join('')}
+          <span class="tag">📍 ${p.occasion}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+window.addEventListener('load', () => {
+  filterPerfumes();
+});
+</script>
+</body>
+</html>
