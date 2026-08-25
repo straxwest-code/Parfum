@@ -168,8 +168,7 @@ function suggestPairings(p){
  .filter(o=>o!==p)
  .map(o=>({o,shared:sharedAccordCount(p,o)}))
  .filter(x=>x.shared>0)
- .sort((a,b)=>b.shared-a.shared)
- .slice(0,2)
+ .sort((a,b)=>b.shared-a.shared || a.o[0].localeCompare(b.o[0]))
  .map(x=>x.o);
 }
 function buyUrl(p){
@@ -191,7 +190,17 @@ function render(){
  $("grid").innerHTML=arr.map(({p,s},i)=>{
  const img=`https://loremflickr.com/700/700/perfume,bottle?lock=${(i+17)%997}`;
  const pairs=suggestPairings(p);
- const pairingHtml=pairs.length?`<div class="pairing"><b>💧 Se marie bien avec :</b> ${pairs.map(o=>`<span class="pname">${o[0]} (${o[1]})</span>`).join(", ")} — accords proches : ${p[6].split("|").filter(a=>pairs.some(o=>o[6].includes(a))).join(" · ")}</div>`:"";
+ const shownPairs=pairs.slice(0,8);
+ const extra=pairs.length-shownPairs.length;
+ const ownAccords=new Set(p[6].split("|"));
+ const relatedAccords=[...new Set(pairs.flatMap(o=>o[6].split("|")))];
+ const ownNotes=new Set(p[7].split("|"));
+ const relatedNotes=[...new Set(pairs.flatMap(o=>o[7].split("|")))].filter(n=>!ownNotes.has(n));
+ const pairingHtml=shownPairs.length?`<div class="pairing">
+ <b>💧 Parfums similaires (${pairs.length}) :</b> ${shownPairs.map(o=>`<span class="pname">${o[0]} (${o[1]})</span>`).join(", ")}${extra>0?` <i>+${extra} autre${extra>1?"s":""}</i>`:""}<br>
+ <b>🌿 Accords communs :</b> ${relatedAccords.join(" · ")}
+ ${relatedNotes.length?`<br><b>✨ Notes qui pourraient bien s'associer :</b> ${relatedNotes.join(" · ")}`:""}
+ </div>`:"";
  return `<article class="card">
  <img class="product-img" src="${img}" alt="Flacon de parfum ${p[0]} — ${p[1]}" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=700&q=80'">
  <div class="card-body">
