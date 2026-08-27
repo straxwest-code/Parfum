@@ -12,7 +12,16 @@ header{background:linear-gradient(135deg,#17131f,#3a2b55);color:white;padding:36
 .wrap{max-width:1200px;margin:auto}.brand{font-size:13px;letter-spacing:.16em;text-transform:uppercase;opacity:.8}.hero{display:flex;justify-content:space-between;gap:20px;align-items:end;flex-wrap:wrap}.hero h1{font-size:clamp(30px,5vw,52px);line-height:1;margin:10px 0}.hero p{max-width:700px;color:#ddd;margin:12px 0 0;font-size:16px}
 main{padding:24px 20px 60px}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 8px 30px #00000008;margin-bottom:24px}
-.search{display:flex;gap:10px;margin-bottom:16px}.search input{flex:1;padding:14px 16px;border:1px solid var(--line);border-radius:12px;font-size:15px;outline:none}.search button,.surprise{border:0;border-radius:12px;background:var(--accent);color:white;font-weight:700;padding:0 18px;cursor:pointer;min-height:46px;transition:.2s}.search button:hover,.surprise:hover{filter:brightness(.92)}
+.search{display:flex;gap:10px;margin-bottom:16px}.search-input-wrap{flex:1;position:relative}.search input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:12px;font-size:15px;outline:none}.search button,.surprise{border:0;border-radius:12px;background:var(--accent);color:white;font-weight:700;padding:0 18px;cursor:pointer;min-height:46px;transition:.2s}.search button:hover,.surprise:hover{filter:brightness(.92)}
+.suggest-list{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px #00000020;max-height:340px;overflow-y:auto;z-index:30;display:none}
+.suggest-list.show{display:block}
+.suggest-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1efe9}
+.suggest-item:last-child{border-bottom:0}
+.suggest-item:hover,.suggest-item.hi{background:var(--soft)}
+.suggest-item img{width:34px;height:34px;object-fit:contain;border-radius:7px;background:#fafafa;border:1px solid #eee;flex:none}
+.suggest-name{font-weight:700;font-size:13px;line-height:1.2}
+.suggest-brand{font-size:11px;color:var(--muted)}
+.suggest-empty{padding:12px;font-size:13px;color:var(--muted)}
 .filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin:0 0 5px;text-transform:uppercase}.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:white;font-size:14px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer;transition:.15s}.chip.active{background:var(--soft);border-color:#c8baff;color:#5537d8;font-weight:700}
 
@@ -106,7 +115,14 @@ footer{text-align:center;color:var(--muted);padding:30px;font-size:13px}
 </section>
 
 <section class="panel">
-<div class="search"><input id="q" placeholder="Rechercher un parfum, une marque, une note (vanille, oud, bergamote...)" autocomplete="off"><button id="searchBtn" type="button">🔎 Rechercher</button><button id="surprise" class="surprise" type="button">🎲 Surprends-moi</button></div>
+<div class="search">
+  <div class="search-input-wrap">
+    <input id="q" placeholder="Rechercher un parfum, une marque, une note (vanille, oud, bergamote...)" autocomplete="off">
+    <div id="qSuggest" class="suggest-list"></div>
+  </div>
+  <button id="searchBtn" type="button">🔎 Rechercher</button>
+  <button id="surprise" class="surprise" type="button">🎲 Surprends-moi</button>
+</div>
 <div class="filters">
 <div class="field"><label>Budget</label><select id="price"><option value="">Tous les prix</option><option value="under30">< 30 €</option><option value="under80">30 € - 80 €</option><option value="80to100">80 € - 100 €</option><option value="over100">100 € et +</option></select></div>
 <div class="field"><label>Genre</label><select id="gender"><option value="">Tous</option><option>Homme</option><option>Femme</option><option>Unisexe</option></select></div>
@@ -235,7 +251,63 @@ const perfumes = [
 
   // --- Petit prix supplémentaires ---
   ["Yara", "Lattafa", "Femme", "Toute saison", "Quotidien|Date", "Petit prix", "Fruité|Floral|Gourmand", "Fruits tropicaux|Jasmin|Orchidée|Vanille", 24, IMG_FLORAL, "Une crème vanillée neutre en dessous prolonge cette gourmandise fruitée très appréciée."],
-  ["Club de Nuit Woman", "Armaf", "Femme", "Printemps|Été", "Quotidien|Date", "Petit prix", "Fruité|Floral|Musc", "Pêche|Rose|Patchouli|Musc", 28, IMG_FLORAL, "Un très bon rapport qualité-prix pour s'initier au layering floral-fruité."]
+  ["Club de Nuit Woman", "Armaf", "Femme", "Printemps|Été", "Quotidien|Date", "Petit prix", "Fruité|Floral|Musc", "Pêche|Rose|Patchouli|Musc", 28, IMG_FLORAL, "Un très bon rapport qualité-prix pour s'initier au layering floral-fruité."],
+
+  // --- Homme : classiques & petit prix supplémentaires ---
+  ["Cool Water", "Davidoff", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Aquatique|Aromatique|Boisé", "Menthe|Lavande|Bois de santal|Musc", 42, IMG_FRESH, "Un gel douche marin en dessous prolonge la fraîcheur aquatique emblématique."],
+  ["Eternity for Men", "Calvin Klein", "Homme", "Automne|Printemps", "Travail|Quotidien", "Designer", "Aromatique|Boisé|Épicé", "Basilic|Romarin|Bois de santal|Ambre", 58, IMG_CLASSIC, "Une lotion neutre en dessous suffit à révéler sa structure aromatique classique."],
+  ["Polo Blue", "Ralph Lauren", "Homme", "Printemps|Été", "Quotidien|Vacances", "Designer", "Aquatique|Aromatique|Boisé", "Melon|Basilic|Géranium|Musc", 65, IMG_FRESH, "Combinez avec un gel douche mentholé pour accentuer la fraîcheur du melon."],
+  ["A*Men", "Thierry Mugler", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Gourmand|Boisé|Fumé", "Café|Cacao|Patchouli|Vanille", 72, IMG_GOURMAND, "Superposez avec Angel pour un accord chocolat-caramel-patchouli très marqué."],
+  ["Habit Rouge", "Guerlain", "Homme", "Automne|Hiver", "Cérémonie|Soirée", "Designer", "Boisé|Épicé|Cuiré", "Bergamote|Rose|Cuir|Vanille", 95, IMG_CLASSIC, "Un classique vintage : appliquez sur peau nue, sans layering, pour respecter sa signature."],
+  ["L'Homme Idéal", "Guerlain", "Homme", "Printemps|Automne", "Travail|Date", "Designer", "Boisé|Gourmand|Amandé", "Amande|Poire|Fève tonka|Cèdre", 88, IMG_GOURMAND, "Une crème à l'amande douce en dessous prolonge son sillage gourmand."],
+  ["Man in Black", "Bvlgari", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Ambré|Épicé|Cuiré", "Rhum|Épices|Cuir|Tabac", 84, IMG_DARK, "Associez avec une huile ambrée pour intensifier le fond rhum-tabac."],
+  ["Explorer", "Montblanc", "Homme", "Automne|Printemps", "Travail|Quotidien", "Designer", "Boisé|Aromatique|Cuiré", "Bergamote|Genièvre|Patchouli|Cuir", 58, IMG_CLASSIC, "Bon compagnon de bureau, sublimé par une crème boisée neutre."],
+  ["Voyage", "Nautica", "Homme", "Printemps|Été", "Quotidien|Vacances", "Petit prix", "Aquatique|Agrumes|Boisé", "Pomme|Agrumes|Bois flotté|Musc", 22, IMG_FRESH, "Un excellent parfum d'été petit budget, à porter frais sorti de la douche."],
+  ["Ice Dive", "Adidas", "Homme", "Printemps|Été", "Quotidien", "Petit prix", "Aquatique|Agrumes", "Menthe|Citron|Musc", 12, IMG_FRESH, "Superposez avec un déodorant neutre pour prolonger sa fraîcheur légère."],
+  ["Oud Mood", "Lattafa", "Unisexe", "Automne|Hiver", "Soirée|Cérémonie", "Petit prix", "Oud|Boisé|Épicé", "Oud|Safran|Rose|Ambre", 32, IMG_DARK, "Une huile à l'oud en soin corporel accentue encore sa profondeur boisée."],
+  ["Bade'e Al Oud", "Lattafa", "Unisexe", "Automne|Hiver", "Soirée|Date", "Petit prix", "Oud|Gourmand|Épicé", "Oud|Vanille|Épices|Ambre", 30, IMG_DARK, "Se marie bien avec une crème vanillée pour adoucir l'oud."],
+  ["Ana Abiyedh", "Lattafa", "Unisexe", "Toute saison", "Quotidien|Date", "Petit prix", "Musc|Floral|Poudré", "Musc blanc|Fleurs blanches|Vanille", 26, IMG_FLORAL, "Une crème musquée neutre en dessous prolonge sa signature « peau propre »."],
+  ["Amber Oud", "Al Haramain", "Unisexe", "Automne|Hiver", "Soirée|Cérémonie", "Petit prix", "Ambré|Oud|Vanillé", "Ambre|Oud|Vanille|Musc", 35, IMG_DARK, "Idéal sur une peau préalablement hydratée à l'huile d'amande douce."],
+  ["Blu", "Rasasi", "Homme", "Printemps|Été", "Quotidien|Travail", "Petit prix", "Aromatique|Agrumes|Boisé", "Bergamote|Lavande|Vétiver|Musc", 34, IMG_FRESH, "Un bon substitut économique aux fougères aromatiques designer."],
+  ["Club de Nuit Intense Man Legacy", "Armaf", "Homme", "Automne|Hiver|Printemps", "Soirée|Date", "Petit prix", "Fruité|Boisé|Épicé", "Pomme|Cannelle|Patchouli|Musc", 32, IMG_DARK, "Extension plus épicée du CDNI original, à combiner avec une huile boisée."],
+  ["Tres Nuit", "Armaf", "Homme", "Automne|Hiver", "Soirée|Date", "Petit prix", "Boisé|Épicé|Ambré", "Épices|Patchouli|Ambre|Musc", 30, IMG_DARK, "Un excellent économique inspiré des ambrés boisés de soirée haut de gamme."],
+  ["Le Male", "Jean Paul Gaultier", "Homme", "Printemps|Automne", "Quotidien|Date", "Designer", "Aromatique|Vanillé|Épicé", "Menthe|Lavande|Vanille|Cardamome", 78, IMG_CLASSIC, "Le classique incontournable : une lotion à la lavande en dessous renforce sa fraîcheur aromatique."],
+  ["Acqua di Giò", "Giorgio Armani", "Homme", "Printemps|Été", "Quotidien|Vacances", "Designer", "Aquatique|Agrumes|Aromatique", "Bergamote|Jasmin d'eau|Romarin|Musc", 82, IMG_FRESH, "Un gel douche marin en dessous fait durer sa signature aquatique iconique."],
+  ["Versace Pour Homme", "Versace", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Aromatique|Agrumes|Musqué", "Bergamote|Néroli|Musc|Bois", 74, IMG_FRESH, "Combinez avec une lotion aux agrumes pour prolonger l'ouverture citronnée."],
+  ["The Scent", "Hugo Boss", "Homme", "Automne|Hiver", "Date|Soirée", "Designer", "Épicé|Boisé|Gourmand", "Gingembre|Cacao|Cuir|Maninka", 68, IMG_DARK, "Une huile ambrée en dessous accentue son côté cuir-cacao envoûtant."],
+  ["L.12.12 Blanc", "Lacoste", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Aromatique|Agrumes|Boisé", "Pamplemousse|Cardamome|Vétiver|Musc", 55, IMG_FRESH, "Léger et propre : idéal sur une peau fraîchement lavée, sans autre layering."],
+  ["L'Eau d'Issey Pour Homme", "Issey Miyake", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Aquatique|Boisé|Épicé", "Yuzu|Lotus bleu|Bois de cèdre|Musc", 70, IMG_FRESH, "Un gel douche neutre en dessous laisse respirer sa fraîcheur aquatique signature."],
+
+  // --- Femme : classiques & désirables supplémentaires ---
+  ["Chanel N°5 Eau de Parfum", "Chanel", "Femme", "Toute saison", "Cérémonie|Soirée", "Designer", "Floral|Poudré|Aldéhydé", "Aldéhydes|Ylang-ylang|Rose|Santal", 145, IMG_CLASSIC, "Le classique absolu : se porte seul, sans layering, pour préserver sa signature aldéhydée."],
+  ["Mon Paris", "Yves Saint Laurent", "Femme", "Printemps|Automne", "Date|Soirée", "Designer", "Floral|Gourmand|Fruité", "Fraise|Framboise|Patchouli|Vanille", 108, IMG_GOURMAND, "Une crème fruitée-gourmande en dessous renforce sa signature sucrée."],
+  ["La Vie Est Belle", "Lancôme", "Femme", "Automne|Printemps", "Travail|Date", "Designer", "Gourmand|Floral|Fruité", "Iris|Praliné|Vanille|Fleur d'oranger", 98, IMG_GOURMAND, "Un lait corporel praliné en base intensifie encore son côté gourmand."],
+  ["Mon Guerlain", "Guerlain", "Femme", "Toute saison", "Travail|Quotidien|Date", "Designer", "Floral|Vanillé|Aromatique", "Lavande|Jasmin|Vanille|Fève tonka", 105, IMG_FLORAL, "Combinez avec une lotion à la lavande pour équilibrer sa vanille gourmande."],
+  ["Si", "Giorgio Armani", "Femme", "Automne|Hiver", "Travail|Cérémonie", "Designer", "Fruité|Boisé|Poudré", "Cassis|Rose|Vanille|Patchouli", 102, IMG_FLORAL, "Une crème poudrée en dessous adoucit sa structure chyprée fruitée."],
+  ["Bright Crystal", "Versace", "Femme", "Printemps|Été", "Quotidien|Date", "Designer", "Fruité|Floral|Musc", "Grenade|Pivoine|Musc|Ambre", 72, IMG_FLORAL, "Un lait corporel fruité en base prolonge sa fraîcheur estivale."],
+  ["Her", "Burberry", "Femme", "Printemps|Été", "Quotidien|Date", "Designer", "Fruité|Gourmand|Floral", "Framboise|Cerise|Jasmin|Musc", 92, IMG_GOURMAND, "Idéal avec une crème à la framboise ou à la cerise pour un effet gourmand renforcé."],
+  ["Daisy", "Marc Jacobs", "Femme", "Printemps|Été", "Quotidien|Vacances", "Designer", "Fruité|Floral", "Fraise des bois|Violette|Jasmin|Musc", 78, IMG_FLORAL, "Léger et frais : parfait sur une peau fraîchement crémée, sans excès de layering."],
+  ["212 VIP", "Carolina Herrera", "Femme", "Automne|Été", "Soirée|Date", "Designer", "Fruité|Gourmand|Musqué", "Rhum|Fruit de la passion|Vanille|Musc", 88, IMG_GOURMAND, "Combinez avec une huile ambrée pour prolonger son sillage festif."],
+  ["Olympéa", "Paco Rabanne", "Femme", "Automne|Hiver", "Soirée|Date", "Designer", "Ambré|Vanillé|Floral", "Fleur de sel|Vanille|Ambre gris|Jasmin", 95, IMG_GOURMAND, "Une lotion salée-vanillée en dessous accentue son accord ambre-sel signature."],
+  ["Born In Roma", "Valentino", "Femme", "Automne|Printemps", "Date|Soirée", "Designer", "Ambré|Musqué|Épicé", "Bergamote|Jasmin|Musc blanc|Ambre gris", 108, IMG_FLORAL, "Un musc blanc en base renforce sa tenue ambrée-musquée toute la journée."],
+  ["For Her", "Narciso Rodriguez", "Femme", "Toute saison", "Travail|Date", "Designer", "Musc|Poudré|Ambré", "Musc|Ambre|Vanille|Pêche", 98, IMG_FLORAL, "Sa signature musquée se suffit à elle-même, layering optionnel avec un musc blanc neutre."],
+  ["Angel", "Thierry Mugler", "Femme", "Automne|Hiver", "Soirée|Cérémonie", "Designer", "Gourmand|Boisé|Fruité", "Chocolat|Caramel|Patchouli|Fruits", 112, IMG_GOURMAND, "Superposez avec A*Men pour l'accord chocolat-patchouli le plus culte du genre."],
+  ["Le Parfum", "Elie Saab", "Femme", "Printemps|Été", "Cérémonie|Date", "Designer", "Floral|Fruité|Boisé", "Fleur d'oranger|Jasmin|Bois de cèdre|Miel", 105, IMG_FLORAL, "Une crème au miel ou à la fleur d'oranger en base sublime son bouquet."],
+  ["Paradoxe", "Prada", "Femme", "Toute saison", "Travail|Date", "Designer", "Floral|Ambré|Musqué", "Néroli|Fleur d'oranger|Musc blanc|Ambre", 112, IMG_FLORAL, "Se porte très bien seul, layering léger recommandé avec un musc blanc neutre."],
+  ["Bloom", "Gucci", "Femme", "Printemps|Été", "Quotidien|Date", "Designer", "Floral|Poudré", "Tubéreuse|Jasmin sambac|Iris", 105, IMG_FLORAL, "Une lotion à l'iris en dessous adoucit sa tubéreuse très présente."],
+
+  // --- Niche & indépendants supplémentaires ---
+  ["Black Orchid", "Tom Ford", "Unisexe", "Automne|Hiver", "Soirée|Date", "Niche", "Gourmand|Floral|Boisé", "Truffe noire|Orchidée noire|Patchouli|Chocolat", 165, IMG_DARK, "Superposez avec Tobacco Vanille pour un accord truffe-tabac très riche."],
+  ["Interlude Man", "Amouage", "Homme", "Automne|Hiver", "Soirée|Cérémonie", "Niche", "Épicé|Fumé|Boisé", "Encens|Poivre noir|Oud|Ciste labdanum", 320, IMG_DARK, "Puissant et fumé : se porte seul, sans layering additionnel."],
+  ["Side Effect", "Initio", "Unisexe", "Automne|Hiver", "Soirée|Date", "Niche", "Gourmand|Épicé|Boisé", "Rhum|Cannelle|Tabac|Fève tonka", 245, IMG_GOURMAND, "Sublime combiné à un boisé oud pour une gourmandise plus profonde."],
+  ["Hacivat", "Nishane", "Unisexe", "Printemps|Été", "Date|Quotidien", "Niche", "Fruité|Floral|Musqué", "Ananas|Poire|Fleur d'oranger|Musc", 220, IMG_NICHE, "Se marie bien avec Baccarat Rouge 540 pour un sillage fruité-ambré unique."],
+  ["Naxos", "Xerjoff", "Homme", "Automne|Hiver", "Soirée|Cérémonie", "Niche", "Gourmand|Boisé|Tabac", "Miel|Lavande|Tabac|Bois", 260, IMG_GOURMAND, "Une crème au miel en dessous prolonge son accord miel-tabac emblématique."],
+  ["Cedrat Boisé", "Mancera", "Unisexe", "Toute saison", "Travail|Quotidien", "Niche", "Agrumes|Boisé|Épicé", "Cédrat|Cardamome|Bois de oud|Musc", 145, IMG_FRESH, "Combinez avec Molecule 01 pour aérer son fond boisé."],
+  ["Herod", "Parfums de Marly", "Homme", "Automne|Hiver", "Soirée|Cérémonie", "Niche", "Épicé|Gourmand|Boisé", "Rhum|Cannelle|Tabac|Fève tonka", 265, IMG_DARK, "S'associe très bien à Layton pour renforcer la rondeur boisée-épicée."],
+  ["Black Phantom", "Kilian", "Unisexe", "Automne|Hiver", "Soirée|Date", "Niche", "Gourmand|Boisé|Fumé", "Rhum|Café|Noisette|Bois de oud", 260, IMG_GOURMAND, "Association parfaite avec Angels' Share pour une gourmandise alcoolisée intense."],
+  ["Gypsy Water", "Byredo", "Unisexe", "Printemps|Automne", "Quotidien|Date", "Niche", "Boisé|Aromatique|Vert", "Bergamote|Genévrier|Pin|Vanille", 195, IMG_FRESH, "Une lotion boisée neutre en base prolonge sa fraîcheur végétale."],
+  ["Eau Rose", "Diptyque", "Femme", "Printemps|Été", "Quotidien|Date", "Niche", "Floral|Rose|Fruité", "Rose|Litchi|Pivoine|Musc", 135, IMG_FLORAL, "Superposez avec Rose 31 pour une rose plus boisée et enveloppante."],
+  ["Musc Ravageur", "Frederic Malle", "Unisexe", "Automne|Hiver", "Soirée|Date", "Niche", "Musc|Ambré|Épicé", "Musc|Ambre|Cannelle|Vanille", 220, IMG_NICHE, "Un musc blanc en base amplifie encore sa sensualité animale."]
 ];
 
 const fallbackImg = "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=700&q=80";
@@ -494,9 +566,88 @@ function render() {
   }).join("") || `<div class="empty" style="grid-column:1/-1">Aucun résultat pour cette combinaison. Ajuste tes critères de recherche ou de prix.</div>`;
 }
 
+// ===== Suggestions de recherche (auto-complétion sous le champ "Rechercher") =====
+let qSuggestItems = [];
+let qSuggestIndex = -1;
+
+function buildQSuggestions(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const starts = [], contains = [];
+  const seen = new Set();
+  allPerfumes.forEach(p => {
+    const key = p[0] + "|" + p[1];
+    if (seen.has(key)) return;
+    const name = p[0].toLowerCase(), brand = p[1].toLowerCase();
+    if (name.startsWith(q) || brand.startsWith(q)) { starts.push(p); seen.add(key); }
+    else if ((name + " " + brand + " " + p[6] + " " + p[7]).toLowerCase().includes(q)) { contains.push(p); seen.add(key); }
+  });
+  return [...starts, ...contains].slice(0, 8);
+}
+
+function closeQSuggestions() {
+  qSuggestItems = [];
+  qSuggestIndex = -1;
+  $("qSuggest").classList.remove("show");
+  $("qSuggest").innerHTML = "";
+}
+
+function highlightQSuggestion() {
+  $("qSuggest").querySelectorAll(".suggest-item").forEach((el, i) => {
+    el.classList.toggle("hi", i === qSuggestIndex);
+  });
+}
+
+function pickQSuggestion(p) {
+  $("q").value = p[0];
+  closeQSuggestions();
+  render();
+  $("grid").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderQSuggestions() {
+  const box = $("qSuggest");
+  const list = buildQSuggestions($("q").value);
+  qSuggestItems = list;
+  qSuggestIndex = -1;
+  if (!list.length) { closeQSuggestions(); return; }
+  box.innerHTML = list.map((p, i) => `
+    <div class="suggest-item" data-idx="${i}">
+      <img src="${p[9]}" onerror="this.onerror=null;this.src='${fallbackFor(p)}'" alt="">
+      <div><div class="suggest-name">${p[0]}</div><div class="suggest-brand">${p[1]} · ${p[6].split("|")[0]} · ~${p[8]} €</div></div>
+    </div>`).join("");
+  box.classList.add("show");
+  box.querySelectorAll(".suggest-item").forEach(el => {
+    el.addEventListener("mousedown", e => {
+      e.preventDefault(); // évite que le blur ferme la liste avant le clic
+      pickQSuggestion(list[Number(el.dataset.idx)]);
+    });
+  });
+}
+
 ["q", "price", "gender", "season", "occasion", "style", "sort"].forEach(id => $(id).addEventListener(id === "q" ? "input" : "change", render));
-$("searchBtn").addEventListener("click", () => { render(); $("grid").scrollIntoView({ behavior: "smooth", block: "start" }); });
-$("q").addEventListener("keydown", e => { if (e.key === "Enter") $("searchBtn").click(); });
+$("q").addEventListener("input", renderQSuggestions);
+$("q").addEventListener("focus", () => { if ($("q").value.trim()) renderQSuggestions(); });
+$("q").addEventListener("blur", () => setTimeout(closeQSuggestions, 120));
+document.addEventListener("click", e => { if (!e.target.closest(".search-input-wrap")) closeQSuggestions(); });
+
+$("searchBtn").addEventListener("click", () => { closeQSuggestions(); render(); $("grid").scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("q").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" && qSuggestItems.length) {
+    e.preventDefault();
+    qSuggestIndex = (qSuggestIndex + 1) % qSuggestItems.length;
+    highlightQSuggestion();
+  } else if (e.key === "ArrowUp" && qSuggestItems.length) {
+    e.preventDefault();
+    qSuggestIndex = (qSuggestIndex - 1 + qSuggestItems.length) % qSuggestItems.length;
+    highlightQSuggestion();
+  } else if (e.key === "Enter") {
+    if (qSuggestIndex >= 0 && qSuggestItems[qSuggestIndex]) { pickQSuggestion(qSuggestItems[qSuggestIndex]); }
+    else { $("searchBtn").click(); }
+  } else if (e.key === "Escape") {
+    closeQSuggestions();
+  }
+});
 
 $("surprise").onclick = () => {
   const x = allPerfumes[Math.floor(Math.random() * allPerfumes.length)];
