@@ -62,19 +62,40 @@ footer{text-align:center;color:var(--muted);padding:30px;font-size:13px}
   <div class="layering-grid">
     <div class="custom-mix-box">
       <h3>🧪 Créer & tester une association</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 10px">Champ libre : tape n'importe quel nom de la base (autocomplétion sur <b id="dbCount">0</b> références), ou écris directement un nom qui n'y figure pas encore.</p>
       <div class="mix-selectors">
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--muted)">ÉLÉMENT A (Base ou Parfum)</label>
-          <select id="mixElementA"></select>
+          <label style="font-size:11px;font-weight:700;color:var(--muted)">ÉLÉMENT A (Base, parfum ou soin)</label>
+          <input type="text" id="mixElementA" list="perfumeDatalist" placeholder="Ex: Baccarat Rouge 540 — Maison Francis Kurkdjian" autocomplete="off">
         </div>
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--muted)">ÉLÉMENT B (Parfum ou Soin)</label>
-          <select id="mixElementB"></select>
+          <label style="font-size:11px;font-weight:700;color:var(--muted)">ÉLÉMENT B (Base, parfum ou soin)</label>
+          <input type="text" id="mixElementB" list="perfumeDatalist" placeholder="Ex: Molecule 01 — Escentric Molecules" autocomplete="off">
         </div>
       </div>
+      <datalist id="perfumeDatalist"></datalist>
       <div id="mixAnalysis" style="background:#fff;padding:10px;border-radius:8px;font-size:12px;margin-bottom:10px;border:1px solid #e7deff;color:#333;min-height:50px">Sélectionne deux éléments pour prévisualiser l'harmonie.</div>
       <textarea id="customMixNote" rows="2" placeholder="Note personnelle sur ce mélange (ex: 2 sprays de A + 1 spray de B sur le cou)..."></textarea>
       <button id="saveMixBtn" style="margin-top:8px;background:var(--accent);color:#fff;border:0;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">💾 Enregistrer l'idée</button>
+
+      <div id="savedMixList" style="margin-top:14px"></div>
+
+      <details style="margin-top:16px;border-top:1px dashed #d4caff;padding-top:12px">
+        <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#452da6">➕ Un parfum manque à la base ? Ajoute-le toi-même</summary>
+        <p style="font-size:11px;color:var(--muted);margin:8px 0">Il sera aussitôt disponible dans la grille, les filtres et l'atelier ci-dessus.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <input id="newP_nom" placeholder="Nom (ex: Sointil)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px">
+          <input id="newP_marque" placeholder="Marque (ex: Azzaro)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px">
+          <select id="newP_genre" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px"><option>Unisexe</option><option>Homme</option><option>Femme</option></select>
+          <select id="newP_style" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px"><option>Designer</option><option>Niche</option><option>Indépendant</option><option>Petit prix</option><option>Soin corporel</option></select>
+          <input id="newP_accords" placeholder="Accords séparés par | (ex: Boisé|Ambré)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px;grid-column:1/-1">
+          <input id="newP_notes" placeholder="Notes séparées par | (ex: Oud|Safran|Vanille)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px;grid-column:1/-1">
+          <input id="newP_prix" type="number" placeholder="Prix approx. (€)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px">
+          <input id="newP_image" placeholder="URL de l'image (optionnel)" style="padding:8px;border:1px solid #d4caff;border-radius:8px;font-size:13px">
+        </div>
+        <button id="addPerfumeBtn" style="margin-top:10px;background:#452da6;color:#fff;border:0;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">💾 Ajouter à la base</button>
+        <span id="addPerfumeMsg" style="font-size:11px;color:#2a8f4e;margin-left:8px"></span>
+      </details>
     </div>
 
     <div>
@@ -102,6 +123,16 @@ footer{text-align:center;color:var(--muted);padding:30px;font-size:13px}
 <footer>Base enrichie & atelier de layering dynamique intégrés.</footer>
 
 <script>
+// Visuels représentatifs (photographies libres de droits, vérifiées comme fonctionnelles) utilisés pour
+// les nouvelles références ajoutées, faute de pouvoir garantir la disponibilité pérenne d'une photo officielle
+// exacte pour chaque flacon. Choisis par famille olfactive pour éviter de retomber sur une image générique unique.
+const IMG_FRESH    = "https://images.unsplash.com/photo-1638609927127-aeb9e74c3cfd?auto=format&fit=crop&w=700&q=80"; // agrumes / aquatique / aromatique
+const IMG_GOURMAND = "https://images.unsplash.com/photo-1709662369957-0cbf9f8452fc?auto=format&fit=crop&w=700&q=80"; // gourmand / vanillé / ambré doré
+const IMG_DARK     = "https://images.unsplash.com/photo-1584841247175-4d766cefa018?auto=format&fit=crop&w=700&q=80"; // boisé sombre / cuiré / épicé
+const IMG_FLORAL   = "https://images.unsplash.com/photo-1589493732575-11a963a7c415?auto=format&fit=crop&w=700&q=80"; // floral / poudré
+const IMG_CLASSIC  = "https://images.unsplash.com/photo-1621274784001-2269206f5813?auto=format&fit=crop&w=700&q=80"; // homme classique / designer
+const IMG_NICHE    = "https://images.unsplash.com/photo-1621275155732-2bff82c64fd2?auto=format&fit=crop&w=700&q=80"; // niche / vintage
+
 // Format: [Nom, Marque, Genre, Saisons, Occasions, Style, Accords, Notes, Prix, ImageURL, LayeringConseil]
 const perfumes = [
   // --- < 30 € ---
@@ -142,10 +173,81 @@ const perfumes = [
   ["Philosykos", "Diptyque", "Unisexe", "Printemps|Été", "Quotidien|Vacances", "Niche", "Vert|Boisé|Fruité", "Figue|Feuille de figuier|Cèdre|Coco", 150, "https://www.diptyqueparis.com/dw/image/v2/BCSM_PRD/on/demandware.static/-/Sites-diptyque-master-catalog/default/dw267aa794/images/hi-res/philosykos-eau-de-toilette-100ml.png?sw=800", "Combinez avec un parfum d'agrumes purs pour une fraîcheur méditerranéenne."],
   ["Santal 33", "Le Labo", "Unisexe", "Automne|Hiver|Printemps", "Travail|Date|Quotidien", "Niche", "Boisé|Épicé|Cuiré", "Cardamome|Iris|Santal|Cuir", 275, "https://www.lelabofragrances.com/dw/image/v2/BJTT_PRD/on/demandware.static/-/Sites-lelabo-master-catalog/default/dwc66c3a55/images/products/santal-33_100ml.png?sw=800", "Associez avec Not A Perfume pour aérer le fond cuiré et musqué."],
   ["Molecule 01", "Escentric Molecules", "Unisexe", "Toute saison", "Travail|Quotidien|Date", "Indépendant", "Boisé|Musqué", "Iso E Super", 115, "https://m.media-amazon.com/images/I/51wXpB32yDL._SL1200_.jpg", "Le rehausseur universel : booste la projection de n'importe quel autre parfum."],
-  ["Not a Perfume", "Juliette Has a Gun", "Femme", "Toute saison", "Travail|Quotidien|Date", "Indépendant", "Musc|Ambré|Propre", "Cétalox", 125, "https://m.media-amazon.com/images/I/61NlUo8gq1L._SL1500_.jpg", "Base parfaite pour adoucir les parfums trop floraux ou trop intenses."]
+  ["Not a Perfume", "Juliette Has a Gun", "Femme", "Toute saison", "Travail|Quotidien|Date", "Indépendant", "Musc|Ambré|Propre", "Cétalox", 125, "https://m.media-amazon.com/images/I/61NlUo8gq1L._SL1500_.jpg", "Base parfaite pour adoucir les parfums trop floraux ou trop intenses."],
+
+  // --- Azzaro (collection élargie) ---
+  ["Wanted", "Azzaro", "Homme", "Printemps|Été|Automne", "Quotidien|Travail|Date", "Designer", "Aromatique|Boisé|Épicé", "Citron|Gingembre|Cardamome|Vétiver", 55, IMG_FRESH, "Superposez avec un gel douche mentholé pour prolonger l'ouverture citronnée."],
+  ["The Most Wanted", "Azzaro", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Gourmand|Boisé", "Cognac|Café|Fève tonka|Cardamome", 68, IMG_GOURMAND, "Idéal avec une crème corporelle au cacao ou au café pour intensifier le sillage gourmand."],
+  ["Wanted by Night", "Azzaro", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Ambré", "Cannelle|Miel|Rhum|Fève tonka", 62, IMG_DARK, "Combinez avec une huile ambrée pour prolonger la chaleur épicée en soirée."],
+  ["Chrome", "Azzaro", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Aquatique|Agrumes|Aromatique", "Citron|Menthe|Cyprès|Musc", 48, IMG_FRESH, "Un gel douche marin en dessous fait durer la fraîcheur, sinon assez fugace."],
+  ["Azzaro pour Homme", "Azzaro", "Homme", "Toute saison", "Quotidien|Travail", "Designer", "Aromatique|Épicé|Boisé", "Anis|Basilic|Muscade|Cèdre", 52, IMG_CLASSIC, "Le classique de la maison : une lotion neutre en base suffit à en révéler toute la structure aromatique."],
+
+  // --- Dior ---
+  ["Sauvage Elixir", "Dior", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Aromatique", "Poivre de Sichuan|Cannelle|Lavande|Tabac", 148, IMG_DARK, "Très concentré : une seule pulvérisation sur un point de pulsation suffit, pas besoin de layering additionnel."],
+  ["J'adore Eau de Parfum", "Dior", "Femme", "Printemps|Été|Toute saison", "Cérémonie|Date|Travail", "Designer", "Floral|Fruité", "Ylang-ylang|Rose|Jasmin|Fruits", 118, IMG_FLORAL, "Une crème corporelle florale neutre en dessous prolonge le bouquet sans le dénaturer."],
+  ["Miss Dior Eau de Parfum", "Dior", "Femme", "Printemps|Été", "Date|Quotidien", "Designer", "Floral|Fruité|Musc", "Litchi|Rose|Peau d'orange|Musc", 105, IMG_FLORAL, "Superposez avec Rose 31 pour accentuer la facette rosée."],
+
+  // --- Yves Saint Laurent ---
+  ["Y Eau de Parfum", "Yves Saint Laurent", "Homme", "Printemps|Automne", "Travail|Quotidien", "Designer", "Aromatique|Boisé|Fruité", "Pomme|Sauge|Ambroxan|Cèdre", 92, IMG_FRESH, "Ajoutez Molecule 02 pour amplifier le sillage boisé-ambré."],
+  ["La Nuit de l'Homme", "Yves Saint Laurent", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Aromatique", "Cardamome|Lavande|Bois de cèdre|Vétiver", 88, IMG_CLASSIC, "Appliquez sur une crème boisée neutre pour une tenue de soirée prolongée."],
+  ["Black Opium", "Yves Saint Laurent", "Femme", "Automne|Hiver", "Soirée|Date", "Designer", "Gourmand|Floral|Boisé", "Café|Vanille|Fleur d'oranger|Musc blanc", 110, IMG_GOURMAND, "Un lait corporel vanillé en dessous accentue le côté addictif du café-vanille."],
+  ["Libre Eau de Parfum", "Yves Saint Laurent", "Femme", "Printemps|Été|Toute saison", "Travail|Date|Quotidien", "Designer", "Floral|Aromatique|Ambré", "Lavande|Fleur d'oranger|Musc|Vanille", 108, IMG_FLORAL, "Se marie bien avec Molecule 01 pour aérer la lavande sans perdre en tenue."],
+
+  // --- Giorgio Armani / Emporio Armani ---
+  ["Acqua di Giò Profumo", "Giorgio Armani", "Homme", "Automne|Hiver|Printemps", "Travail|Date|Soirée", "Designer", "Aromatique|Boisé|Marin", "Bergamote|Genièvre|Patchouli|Encens", 105, IMG_FRESH, "Combinez avec un savon marin pour prolonger l'ouverture aquatique."],
+  ["My Way", "Giorgio Armani", "Homme", "Printemps|Été", "Quotidien|Travail", "Designer", "Floral|Boisé|Musc", "Bergamote|Fleur d'oranger|Cèdre|Vanille", 89, IMG_FLORAL, "Une lotion à la fleur d'oranger en dessous adoucit encore la projection."],
+  ["Stronger With You", "Emporio Armani", "Homme", "Automne|Hiver", "Date|Soirée", "Designer", "Gourmand|Épicé|Boisé", "Poire|Cardamome|Châtaigne|Vanille", 65, IMG_GOURMAND, "Superposez avec une crème à la châtaigne ou à la vanille pour l'hiver."],
+
+  // --- Paco Rabanne ---
+  ["1 Million", "Paco Rabanne", "Homme", "Automne|Hiver|Toute saison", "Soirée|Date", "Designer", "Épicé|Boisé|Cuiré", "Sang de sandale|Cannelle|Cuir|Ambre", 78, IMG_DARK, "Sublime avec Invictus pour un duo fruité-cuiré très populaire."],
+  ["Invictus", "Paco Rabanne", "Homme", "Printemps|Été", "Quotidien|Vacances", "Designer", "Aquatique|Boisé|Épicé", "Pamplemousse|Ambre marin|Laurier|Patchouli", 72, IMG_FRESH, "Un gel douche aux agrumes en dessous fait durer la fraîcheur de tête."],
+  ["Phantom", "Paco Rabanne", "Homme", "Printemps|Automne", "Travail|Quotidien", "Designer", "Aromatique|Boisé|Fruité", "Pomme verte|Lavande|Ambroxan", 76, IMG_FRESH, "Ajoutez Molecule 02 pour prolonger l'ambroxan en fin de journée."],
+
+  // --- Chanel ---
+  ["Coco Mademoiselle", "Chanel", "Femme", "Toute saison", "Travail|Date|Cérémonie", "Designer", "Floral|Boisé|Ambré", "Orange|Rose|Patchouli|Vanille", 145, IMG_FLORAL, "Une crème corporelle ambrée en base fixe bien le patchouli sur peau sèche."],
+  ["Chance Eau Tendre", "Chanel", "Femme", "Printemps|Été", "Quotidien|Date", "Designer", "Floral|Fruité", "Pamplemousse|Quetsche|Thé blanc|Musc", 118, IMG_FLORAL, "Un lait corporel neutre en dessous prolonge la fraîcheur fruitée du départ."],
+
+  // --- Carolina Herrera ---
+  ["Good Girl", "Carolina Herrera", "Femme", "Automne|Hiver", "Soirée|Date", "Designer", "Floral|Gourmand|Ambré", "Amande|Café|Jasmin|Fève tonka", 98, IMG_GOURMAND, "Combinez avec une crème à l'amande pour une gourmandise renforcée."],
+  ["Bad Boy", "Carolina Herrera", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Cuiré", "Cacao|Cardamome|Lavande|Fève tonka", 85, IMG_DARK, "Superposez avec 1 Million pour un accord cacao-cuir très marqué."],
+
+  // --- Hugo Boss / Montblanc ---
+  ["Boss Bottled", "Hugo Boss", "Homme", "Automne|Printemps", "Travail|Quotidien", "Designer", "Boisé|Fruité|Épicé", "Pomme|Cannelle|Santal|Vanille", 62, IMG_CLASSIC, "Un excellent parfum de bureau : une lotion neutre en dessous suffit amplement."],
+  ["Legend", "Montblanc", "Homme", "Automne|Hiver", "Travail|Quotidien", "Designer", "Aromatique|Boisé", "Bergamote|Lavande|Noix de coco|Bois de santal", 48, IMG_CLASSIC, "Bon rapport qualité-prix pour débuter le layering boisé au quotidien."],
+
+  // --- Dolce & Gabbana ---
+  ["Light Blue", "Dolce & Gabbana", "Femme", "Printemps|Été", "Quotidien|Vacances", "Designer", "Fruité|Agrumes", "Pomme|Citron|Bambou|Musc blanc", 68, IMG_FRESH, "Un gel douche aux agrumes en dessous fait durer la fraîcheur estivale."],
+  ["The One", "Dolce & Gabbana", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Ambré", "Basilic|Cardamome|Tabac|Ambre", 74, IMG_DARK, "Associez avec une huile ambrée pour prolonger le fond tabac-ambre."],
+
+  // --- Viktor & Rolf / Mugler ---
+  ["Spicebomb", "Viktor & Rolf", "Homme", "Automne|Hiver", "Soirée|Date", "Designer", "Épicé|Boisé|Cuiré", "Poivre rose|Cannelle|Tabac|Cuir", 82, IMG_DARK, "Superposez avec 1 Million ou Bad Boy pour un accord cuir-épices intensifié."],
+  ["Flowerbomb", "Viktor & Rolf", "Femme", "Printemps|Été", "Date|Cérémonie", "Designer", "Floral|Gourmand", "Thé|Jasmin|Fleur d'oranger|Patchouli", 108, IMG_FLORAL, "Une crème au patchouli ou au jasmin en base soutient la longévité du bouquet."],
+  ["Alien Eau de Parfum", "Mugler", "Femme", "Automne|Hiver", "Soirée|Date", "Designer", "Floral|Boisé|Ambré", "Jasmin sambac|Bois de cashmeran|Ambre", 98, IMG_FLORAL, "Combinez avec une huile ambrée pour prolonger le sillage boisé caractéristique."],
+
+  // --- Niche & indépendants complémentaires ---
+  ["Aventus", "Creed", "Homme", "Toute saison", "Travail|Date|Cérémonie", "Niche", "Fruité|Boisé|Fumé", "Ananas|Bouleau|Musc|Chêne", 320, IMG_NICHE, "Le duo de superposition le plus copié du marché : Molecule 01 en dessous démultiplie le sillage fumé."],
+  ["Erba Pura", "Xerjoff", "Unisexe", "Printemps|Été", "Date|Vacances", "Niche", "Fruité|Agrumes|Gourmand", "Bergamote|Fraise|Vanille|Musc", 235, IMG_FRESH, "Une lotion fruitée neutre en base prolonge cette ouverture très gourmande."],
+  ["Rose 31", "Le Labo", "Unisexe", "Automne|Hiver|Printemps", "Travail|Date", "Niche", "Boisé|Épicé|Rose", "Cumin|Rose|Cèdre|Musc", 225, IMG_NICHE, "Superposez avec Santal 33 pour une rose boisée plus enveloppante."],
+  ["Another 13", "Le Labo", "Unisexe", "Toute saison", "Travail|Quotidien|Date", "Niche", "Musc|Ambré|Marin", "Ambrette|Musc|Iso E Super", 235, IMG_NICHE, "Sert souvent de booster : quelques touches sous n'importe quel parfum discret."],
+  ["Portrait of a Lady", "Frederic Malle", "Femme", "Automne|Hiver", "Soirée|Cérémonie", "Niche", "Floral|Boisé|Épicé", "Rose|Patchouli|Cannelle|Encens", 285, IMG_NICHE, "Molecule 01 appliqué en dessous amplifie la diffusion de ce floral très riche."],
+  ["Molecule 02", "Escentric Molecules", "Unisexe", "Toute saison", "Travail|Quotidien", "Indépendant", "Musqué|Boisé", "Ambroxan", 120, IMG_NICHE, "Booste la tenue de n'importe quel parfum discret posé par-dessus."],
+  ["Black Saffron", "Byredo", "Unisexe", "Automne|Hiver", "Soirée|Travail", "Niche", "Épicé|Boisé|Fruité", "Safran|Cassis|Bois de oud|Ambre", 195, IMG_NICHE, "Molecule 02 en base intensifie encore le fond boisé-safrané."],
+
+  // --- Petit prix supplémentaires ---
+  ["Yara", "Lattafa", "Femme", "Toute saison", "Quotidien|Date", "Petit prix", "Fruité|Floral|Gourmand", "Fruits tropicaux|Jasmin|Orchidée|Vanille", 24, IMG_FLORAL, "Une crème vanillée neutre en dessous prolonge cette gourmandise fruitée très appréciée."],
+  ["Club de Nuit Woman", "Armaf", "Femme", "Printemps|Été", "Quotidien|Date", "Petit prix", "Fruité|Floral|Musc", "Pêche|Rose|Patchouli|Musc", 28, IMG_FLORAL, "Un très bon rapport qualité-prix pour s'initier au layering floral-fruité."]
 ];
 
 const fallbackImg = "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=700&q=80";
+const FALLBACK_POOL = [fallbackImg, IMG_FRESH, IMG_GOURMAND, IMG_DARK, IMG_FLORAL, IMG_CLASSIC, IMG_NICHE];
+// Choisit une image de secours différente selon le parfum (nom+marque) plutôt que de toujours retomber
+// sur la même photo générique quand l'URL d'origine est cassée.
+function fallbackFor(p) {
+  const key = p[0] + p[1];
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return FALLBACK_POOL[hash % FALLBACK_POOL.length];
+}
 
 const presetLayerings = [
   { p1: "Lost Cherry", p2: "Tobacco Vanille", desc: "Le roi des mélanges d'hiver : cerise noire liqueur associée à un tabac blond chaud vanillé." },
@@ -156,35 +258,77 @@ const presetLayerings = [
 ];
 
 const $ = id => document.getElementById(id);
-const accordNames = [...new Set(perfumes.flatMap(p => p[6].split("|")))].sort();
+
+// ===== Base fusionnée : catalogue de départ + parfums ajoutés manuellement par l'utilisateur =====
+const CUSTOM_PERFUMES_KEY = "olfactif_custom_perfumes_v1";
+const CUSTOM_BLENDS_KEY = "olfactif_custom_blends_v1";
+
+function loadCustomPerfumes() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_PERFUMES_KEY)) || []; } catch (e) { return []; }
+}
+function saveCustomPerfumes(list) {
+  try { localStorage.setItem(CUSTOM_PERFUMES_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function loadCustomBlends() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_BLENDS_KEY)) || []; } catch (e) { return []; }
+}
+function saveCustomBlends(list) {
+  try { localStorage.setItem(CUSTOM_BLENDS_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+let allPerfumes = [...perfumes, ...loadCustomPerfumes()];
 const chips = $("chips");
 
-accordNames.forEach(a => {
-  const b = document.createElement("button");
-  b.className = "chip";
-  b.textContent = a;
-  b.onclick = () => { b.classList.toggle("active"); render(); };
-  chips.appendChild(b);
-});
+function labelFor(p) { return `${p[0]} — ${p[1]}`; }
+
+function findPerfumeByLabel(text) {
+  const t = (text || "").trim().toLowerCase();
+  if (!t) return null;
+  return allPerfumes.find(p => labelFor(p).toLowerCase() === t) ||
+         allPerfumes.find(p => p[0].toLowerCase() === t) ||
+         null;
+}
+
+function refreshAccordChips() {
+  const accordNames = [...new Set(allPerfumes.flatMap(p => p[6].split("|")))].sort();
+  const activeBefore = new Set([...chips.querySelectorAll(".active")].map(x => x.textContent));
+  chips.innerHTML = "";
+  accordNames.forEach(a => {
+    const b = document.createElement("button");
+    b.className = "chip" + (activeBefore.has(a) ? " active" : "");
+    b.textContent = a;
+    b.onclick = () => { b.classList.toggle("active"); render(); };
+    chips.appendChild(b);
+  });
+}
+
+function refreshPerfumeDatalist() {
+  $("perfumeDatalist").innerHTML = allPerfumes.map(p => `<option value="${labelFor(p)}">`).join("");
+  const counter = $("dbCount");
+  if (counter) counter.textContent = allPerfumes.length;
+}
 
 function initLayeringStudio() {
-  const selectA = $("mixElementA");
-  const selectB = $("mixElementB");
-  selectA.innerHTML = perfumes.map((p,i) => `<option value="${i}">${p[0]} (${p[1]})</option>`).join("");
-  selectB.innerHTML = perfumes.map((p,i) => `<option value="${i}" ${i===1?'selected':''}>${p[0]} (${p[1]})</option>`).join("");
-  
-  selectA.onchange = updateMixAnalysis;
-  selectB.onchange = updateMixAnalysis;
+  refreshAccordChips();
+  refreshPerfumeDatalist();
+
+  const inputA = $("mixElementA");
+  const inputB = $("mixElementB");
+  inputA.value = labelFor(allPerfumes[0]);
+  inputB.value = labelFor(allPerfumes[1]);
+
+  inputA.addEventListener("input", updateMixAnalysis);
+  inputB.addEventListener("input", updateMixAnalysis);
   updateMixAnalysis();
 
   const presetContainer = $("presetList");
   presetContainer.innerHTML = presetLayerings.map(rec => {
-    const item1 = perfumes.find(p => p[0] === rec.p1) || perfumes[0];
-    const item2 = perfumes.find(p => p[0] === rec.p2) || perfumes[1];
+    const item1 = allPerfumes.find(p => p[0] === rec.p1) || allPerfumes[0];
+    const item2 = allPerfumes.find(p => p[0] === rec.p2) || allPerfumes[1];
     return `<div class="recipe-card">
       <div class="recipe-thumbs">
-        <img src="${item1[9]}" onerror="this.src='${fallbackImg}'" alt="${item1[0]}">
-        <img src="${item2[9]}" onerror="this.src='${fallbackImg}'" alt="${item2[0]}">
+        <img src="${item1[9]}" onerror="this.src='${fallbackFor(item1)}'" alt="${item1[0]}">
+        <img src="${item2[9]}" onerror="this.src='${fallbackFor(item2)}'" alt="${item2[0]}">
       </div>
       <div class="recipe-info">
         <div class="recipe-title">${item1[0]} + ${item2[0]}</div>
@@ -194,22 +338,77 @@ function initLayeringStudio() {
   }).join("");
 
   $("saveMixBtn").onclick = () => {
-    const p1 = perfumes[selectA.value];
-    const p2 = perfumes[selectB.value];
+    const labelA = inputA.value.trim();
+    const labelB = inputB.value.trim();
+    if (!labelA || !labelB) return;
     const userNote = $("customMixNote").value.trim();
-    alert(`✨ Idée de mélange sauvegardée :\n• ${p1[0]} + ${p2[0]}\n• Note : ${userNote || 'Aucune note spécifique'}`);
+    const list = loadCustomBlends();
+    list.unshift({ id: "b" + Date.now().toString(36), a: labelA, b: labelB, note: userNote, createdAt: new Date().toISOString() });
+    saveCustomBlends(list);
     $("customMixNote").value = "";
+    renderSavedBlends();
+  };
+
+  renderSavedBlends();
+
+  $("addPerfumeBtn").onclick = () => {
+    const nom = $("newP_nom").value.trim();
+    const marque = $("newP_marque").value.trim();
+    if (!nom || !marque) { $("addPerfumeMsg").style.color = "#b33939"; $("addPerfumeMsg").textContent = "Nom et marque sont obligatoires."; return; }
+    const genre = $("newP_genre").value;
+    const style = $("newP_style").value;
+    const accords = $("newP_accords").value.trim() || "Boisé";
+    const notes = $("newP_notes").value.trim() || "—";
+    const prix = Number($("newP_prix").value) || 0;
+    const image = $("newP_image").value.trim() || FALLBACK_POOL[Math.floor(Math.random() * FALLBACK_POOL.length)];
+    const nouveau = [nom, marque, genre, "Toute saison", "Quotidien|Date|Soirée", style, accords, notes, prix, image, "Ajouté manuellement — associez-le librement dans l'atelier ci-dessus."];
+
+    const customs = loadCustomPerfumes();
+    customs.unshift(nouveau);
+    saveCustomPerfumes(customs);
+    allPerfumes = [...perfumes, ...customs];
+
+    refreshAccordChips();
+    refreshPerfumeDatalist();
+    render();
+
+    ["newP_nom","newP_marque","newP_accords","newP_notes","newP_prix","newP_image"].forEach(id => $(id).value = "");
+    $("addPerfumeMsg").style.color = "#2a8f4e";
+    $("addPerfumeMsg").textContent = `"${nom}" ajouté à la base (${allPerfumes.length} références).`;
   };
 }
 
+function renderSavedBlends() {
+  const list = loadCustomBlends();
+  const container = $("savedMixList");
+  if (!list.length) { container.innerHTML = ""; return; }
+  container.innerHTML = `<h4 style="font-size:12px;color:#452da6;margin:0 0 8px">📌 Mes associations enregistrées (${list.length})</h4>` +
+    list.map(b => `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;background:#fff;border:1px solid #e7deff;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+        <div><b>${b.a}</b> + <b>${b.b}</b>${b.note ? `<br><span style="color:#666">${b.note}</span>` : ""}</div>
+        <button data-id="${b.id}" class="delBlend" style="border:0;background:none;color:#b33939;cursor:pointer;font-weight:700">✕</button>
+      </div>`).join("");
+  container.querySelectorAll(".delBlend").forEach(btn => {
+    btn.onclick = () => {
+      saveCustomBlends(loadCustomBlends().filter(b => b.id !== btn.dataset.id));
+      renderSavedBlends();
+    };
+  });
+}
+
 function updateMixAnalysis() {
-  const p1 = perfumes[$("mixElementA").value];
-  const p2 = perfumes[$("mixElementB").value];
+  const p1 = findPerfumeByLabel($("mixElementA").value);
+  const p2 = findPerfumeByLabel($("mixElementB").value);
+
+  if (!p1 || !p2) {
+    $("mixAnalysis").innerHTML = `<b>Association hors base :</b> l'un des deux éléments ne correspond à aucune fiche existante. Décris-le librement dans la note ci-dessous, ou ajoute-le définitivement via « Ajoute-le toi-même » plus bas.`;
+    return;
+  }
   const allAccords = [...new Set([...p1[6].split("|"), ...p2[6].split("|")])];
   const shared = p1[6].split("|").filter(a => p2[6].split("|").includes(a));
-  
+
   $("mixAnalysis").innerHTML = `<b>Profil combiné :</b> ${allAccords.slice(0, 5).join(" · ")}<br>` +
-    (shared.length 
+    (shared.length
       ? `<b>Harmonie naturelle :</b> partage des accords (${shared.join(", ")}). Résultat fluide et fondu.`
       : `<b>Contraste créatif :</b> les accords s'opposent. Très bon potentiel de signature originale.`);
 }
@@ -243,7 +442,7 @@ function buyUrl(p) {
 }
 
 function render() {
-  let arr = perfumes.map(p => ({ p, s: score(p) })).filter(x => {
+  let arr = allPerfumes.map(p => ({ p, s: score(p) })).filter(x => {
     const p = x.p, q = $("q").value.toLowerCase().trim();
     return (!q || (p.join(" ").toLowerCase().includes(q))) &&
       matchesPrice(p[8], $("price").value) &&
@@ -269,7 +468,7 @@ function render() {
     return `<article class="card">
       <div class="img-container">
         <span class="price-badge">~${p[8]} €</span>
-        <img class="product-img" src="${p[9]}" alt="${p[0]} ${p[1]}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImg}'">
+        <img class="product-img" src="${p[9]}" alt="${p[0]} ${p[1]}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackFor(p)}'">
       </div>
       <div class="card-body">
         <div class="tagrow">
@@ -300,7 +499,7 @@ $("searchBtn").addEventListener("click", () => { render(); $("grid").scrollIntoV
 $("q").addEventListener("keydown", e => { if (e.key === "Enter") $("searchBtn").click(); });
 
 $("surprise").onclick = () => {
-  const x = perfumes[Math.floor(Math.random() * perfumes.length)];
+  const x = allPerfumes[Math.floor(Math.random() * allPerfumes.length)];
   alert(`🎲 Recommandation aléatoire :\n\n${x[0]} — ${x[1]} (~${x[8]} €)\n${x[6].replaceAll("|", " · ")}\n\n💡 Layering : ${x[10]}`);
 };
 
